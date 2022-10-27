@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "497356344642",
+    "project_id": "powell-laboratories-fsm",
+    "storage_bucket": "powell-laboratories-fsm.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:497356344642:android:d76ac2e0712819a7354cdb",
+        "android_client_info": {
+          "package_name": "com.powelllaboratoriesfsm"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "497356344642-07h86i5stbg0vsuohtfuks4nhc66co9g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCYzaNs3Fm9K54BaNxkKQ67GJcTTMsJVP8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "497356344642-07h86i5stbg0vsuohtfuks4nhc66co9g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
