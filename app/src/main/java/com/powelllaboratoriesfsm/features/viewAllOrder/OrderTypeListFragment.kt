@@ -248,7 +248,12 @@ class OrderTypeListFragment : BaseFragment(), View.OnClickListener {
 
         BaseActivity.isApiInitiated = true
         val repository = ProductListRepoProvider.productListProvider()
-        progress_wheel.spin()
+//        progress_wheel.spin()
+        if(Pref.isShowAllProduct){
+            progress_wheel.spin()
+        }else{
+
+        }
         BaseActivity.compositeDisposable.add(
                 repository.getProductRateList(shopId)
                         .observeOn(AndroidSchedulers.mainThread())
