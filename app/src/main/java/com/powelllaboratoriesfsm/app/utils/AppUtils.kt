@@ -36,10 +36,12 @@ import android.util.Log
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import com.powelllaboratoriesfsm.R
+import com.powelllaboratoriesfsm.app.AppDatabase
 import com.powelllaboratoriesfsm.app.Pref
+import com.powelllaboratoriesfsm.features.location.LocationWizard
 import com.powelllaboratoriesfsm.features.login.model.LoginStateListDataModel
 import com.powelllaboratoriesfsm.features.login.model.productlistmodel.ProductRateDataModel
-import com.elvishew.xlog.XLog
+
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.gson.Gson
@@ -48,6 +50,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.WriterException
 import com.google.zxing.qrcode.QRCodeWriter
 import org.apache.commons.lang3.StringEscapeUtils
+import timber.log.Timber
 import java.io.*
 import java.math.BigDecimal
 import java.sql.Timestamp
@@ -59,6 +62,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.regex.Matcher
 import java.util.regex.Pattern
 
 
@@ -165,6 +169,12 @@ class AppUtils {
             }
 
             return monthVal.toString()
+        }
+
+        fun getCurrentDateTimeNew(): String {
+            val df = LocalDateTime.now()
+            var formatD = df.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+            return formatD.toString()
         }
 
         fun getMonthFromValue(monthValue: String): String {
@@ -477,9 +487,24 @@ class AppUtils {
             val f = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
             return f.format(convertedDate)
         }
+        fun getCurrentDateFormatInTaNew(loginDate: String): String {
+//           loginDate: "dd-MMM-yy"
+            val dateFormat = SimpleDateFormat("dd-MMM-yyyy", Locale.ENGLISH)
+            var convertedDate = Date()
+            try {
+                convertedDate = dateFormat.parse(loginDate) //"20130526160000"
+            } catch (e: ParseException) {
+                // TODO Auto-generated catch block
+                e.printStackTrace()
+            }
+            val f = SimpleDateFormat("yy-MM-dd", Locale.ENGLISH)
+            return f.format(convertedDate)
+        }
 
         @Throws(ParseException::class)
         fun getFormatedDateNew(date: String?, initDateFormat: String?, endDateFormat: String?): String? {
+            if(date.equals(""))
+                return ""
             val initDate: Date = SimpleDateFormat(initDateFormat).parse(date)
             val formatter = SimpleDateFormat(endDateFormat)
             return formatter.format(initDate)
@@ -586,6 +611,9 @@ class AppUtils {
             return spf.format(date)
         }
 
+        fun findPrevDay(localdate: LocalDate): LocalDate? {
+            return localdate.minusDays(1)
+        }
 
         fun substractDates(date1: Date, date2: Date): String {
             val restDatesinMillis = date1.time - date2.time
@@ -669,11 +697,11 @@ class AppUtils {
                 sHours = "5"
             }
 
-            XLog.e("====CALCULATE DURATION (AppUtils)=====")
-            XLog.e("Hours Spent====> $sHours")
+            Timber.e("====CALCULATE DURATION (AppUtils)=====")
+            Timber.e("Hours Spent====> $sHours")
 
             val duration = "$sHours:$sMinute:$sSecond"
-            XLog.e("Duration Spent====> $duration")
+            Timber.e("Duration Spent====> $duration")
 
             return duration*/
 
@@ -738,11 +766,11 @@ class AppUtils {
                 sHours = "5"
             }
 
-            XLog.e("====CALCULATE DURATION (AppUtils)=====")
-            XLog.e("Hours Spent====> $sHours")
+            Timber.e("====CALCULATE DURATION (AppUtils)=====")
+            Timber.e("Hours Spent====> $sHours")
 
             /*try {
-                XLog.e("Minutes Spent====> $sMinute")
+                Timber.e("Minutes Spent====> $sMinute")
                 sMinute.toInt()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -750,7 +778,7 @@ class AppUtils {
             }*/
 
             val duration = "$sHours:$sMinute:$sSecond"
-            XLog.e("Duration Spent====> $duration")
+            Timber.e("Duration Spent====> $duration")
 
             return duration
         }
@@ -808,6 +836,14 @@ class AppUtils {
                 e.printStackTrace()
             }
 
+        }
+
+        fun capitalizeCustom(str: String): String? {
+            if(str.contains("N.A",ignoreCase = true)){
+                return str.toUpperCase()
+            }
+            return str.trim().split("\\s+".toRegex())
+                .joinToString(" ") { it.capitalize() }
         }
 
 
@@ -980,8 +1016,12 @@ class AppUtils {
             return SimpleDateFormat("dd-MMM-yy", Locale.ENGLISH).format(date)
         }
 
+
         fun getFormattedDateForApi(date: Date): String {
             return SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(date)
+        }
+        fun getFormattedDateForApi1(date: Date): String {
+            return SimpleDateFormat("dd-MM-yyyy", Locale.ENGLISH).format(date)
         }
 
         fun getAttendanceFormattedDateForApi(date: Date): String {
@@ -1023,6 +1063,30 @@ class AppUtils {
                     + "([0-1]?[0-9]{1,2}|25[0-5]|2[0-4][0-9])\\.([0-1]?"
                     + "[0-9]{1,2}|25[0-5]|2[0-4][0-9])){1}|"
                     + "([a-zA-Z]+[\\w-]+\\.)+[a-zA-Z]{2,4})$").matcher(emailId).matches()
+        }
+
+        fun isValidPanCardNo(panCardNo:String) : Boolean
+        {
+            var regex :String = "[A-Z]{5}[0-9]{4}[A-Z]{1}";
+            var p : Pattern = Pattern.compile(regex);
+            if (panCardNo == null)
+            {
+                return false;
+            }
+            var m : Matcher = p.matcher(panCardNo);
+            return m.matches();
+        }
+
+        fun isValidGSTINCardNo(panCardNo:String) : Boolean
+        {
+            var regex :String = "[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[A-Z,0-9]{3}";
+            var p : Pattern = Pattern.compile(regex);
+            if (panCardNo == null)
+            {
+                return false;
+            }
+            var m : Matcher = p.matcher(panCardNo);
+            return m.matches();
         }
 
         /**
@@ -1257,6 +1321,45 @@ class AppUtils {
             return info != null && info.isAvailable && info.isConnected
         }
 
+        fun endShopDuration(shopId: String,mContext: Context) {
+            val shopActiList = AppDatabase.getDBInstance()!!.shopActivityDao().getShopForDay(shopId, AppUtils.getCurrentDateForShopActi())
+            if (shopActiList.isEmpty())
+                return
+            if (!Pref.isMultipleVisitEnable) {
+                if (!shopActiList[0].isDurationCalculated && !shopActiList[0].isUploaded) {
+                    AppUtils.changeLanguage(mContext, "en")
+                    val endTimeStamp = System.currentTimeMillis().toString()
+                    val startTimestamp = shopActiList[0].startTimeStamp
+
+                    val duration = AppUtils.getTimeFromTimeSpan(startTimestamp, endTimeStamp)
+                    val totalMinute = AppUtils.getMinuteFromTimeStamp(startTimestamp, endTimeStamp)
+
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateEndTimeOfShop(endTimeStamp, shopActiList[0].shopid!!, AppUtils.getCurrentDateForShopActi())
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateIsUploaded(false, shopActiList[0].shopid!!, AppUtils.getCurrentDateForShopActi())
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateTotalMinuteForDayOfShop(shopActiList[0].shopid!!, totalMinute, AppUtils.getCurrentDateForShopActi())
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateTimeDurationForDayOfShop(shopActiList[0].shopid!!, duration, AppUtils.getCurrentDateForShopActi())
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateDurationAvailable(true, shopActiList[0].shopid!!, AppUtils.getCurrentDateForShopActi())
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateOutTime(AppUtils.getCurrentTimeWithMeredian(), shopActiList[0].shopid!!, AppUtils.getCurrentDateForShopActi(), shopActiList[0].startTimeStamp)
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateOutLocation(LocationWizard.getNewLocationName(mContext, Pref.current_latitude.toDouble(), Pref.current_longitude.toDouble()), shopActiList[0].shopid!!, AppUtils.getCurrentDateForShopActi(), shopActiList[0].startTimeStamp)
+
+                    val netStatus = if (AppUtils.isOnline(mContext))
+                        "Online"
+                    else
+                        "Offline"
+
+                    val netType = if (AppUtils.getNetworkType(mContext).equals("wifi", ignoreCase = true))
+                        AppUtils.getNetworkType(mContext)
+                    else
+                        "Mobile ${AppUtils.mobNetType(mContext)}"
+
+                    AppDatabase.getDBInstance()!!.shopActivityDao().updateDeviceStatusReason(AppUtils.getDeviceName(), AppUtils.getAndroidVersion(),
+                        AppUtils.getBatteryPercentage(mContext).toString(), netStatus, netType.toString(), shopActiList[0].shopid!!, AppUtils.getCurrentDateForShopActi())
+
+                    Pref.isShopVisited = false
+                }
+            }
+        }
+
         fun getNetworkType(context: Context): String? {
             var networkType: String? = null
             val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -1347,15 +1450,13 @@ class AppUtils {
         fun getDeviceName(): String {
             val manufacturer = Build.MANUFACTURER
             val model = Build.MODEL
-            return if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) {
-                capitalize(model)
-            } else {
+            return if (model.toLowerCase().startsWith(manufacturer.toLowerCase())) { capitalize(model) } else {
                 capitalize(manufacturer) + " " + model
             }
         }
 
 
-        private fun capitalize(s: String?): String {
+        private fun capitalize(s: String): String {
             if (s == null || s.isEmpty()) {
                 return ""
             }
@@ -1966,9 +2067,9 @@ class AppUtils {
         fun getCompressImage(filePath: String): Long {
             val file = File(filePath)
 
-            //XLog.e("Dashboard", "image file size before compression=======> " + file.length())
+            //Timber.e("Dashboard", "image file size before compression=======> " + file.length())
 
-            XLog.e("Dashboard: image file size before compression=======> " + file.length())
+            Timber.e("Dashboard: image file size before compression=======> " + file.length())
 
             try {
                 val bitmapImage = BitmapFactory.decodeFile(filePath)
@@ -1988,24 +2089,64 @@ class AppUtils {
                 fos.flush()
                 fos.close()
 
-                XLog.e("Dashboard: image file path======> $filePath")
-                XLog.e("Dashboard: image file size after compression=======> " + file.length())
+                Timber.e("Dashboard: image file path======> $filePath")
+                Timber.e("Dashboard: image file size after compression=======> " + file.length())
                 return file.length()
             } catch (e: FileNotFoundException) {
                 // TODO Auto-generated catch block
                 e.printStackTrace()
-                XLog.e("Dashboard: " + e.localizedMessage)
+                Timber.e("Dashboard: " + e.localizedMessage)
             } catch (e: IOException) {
                 // TODO Auto-generated catch block
                 e.printStackTrace()
-                XLog.e("Dashboard: " + e.localizedMessage)
+                Timber.e("Dashboard: " + e.localizedMessage)
             } catch (e: Exception) {
                 e.printStackTrace()
-                XLog.e("Dashboard: " + e.localizedMessage)
+                Timber.e("Dashboard: " + e.localizedMessage)
             }
             return 0
         }
+        fun getCompressOldImageForFace(filePath: String, context: Context): Long {
+            var updatedFilePath = ""
+            if (filePath.contains("file://")) {
+                updatedFilePath = filePath.substring(6, filePath.length)
+            }
+            val file = File(updatedFilePath)
+            val file_path = Uri.fromFile(file)
 
+            Log.e("Dashboard", "file uri-----------------> $file_path")
+            Log.e("Dashboard", "image file size before compression-----------------> " + file.length())
+
+            try {
+                val bitmap = MediaStore.Images.Media.getBitmap(context.contentResolver, Uri.parse(filePath))
+                //bitmap.compress(Bitmap.CompressFormat.JPEG, 2, FileOutputStream(file))
+
+                //Convert bitmap to byte array
+                val bos = ByteArrayOutputStream()
+                //bitmap.compress(Bitmap.CompressFormat.PNG, 2, bos);
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 50, bos)
+                val bitmapdata = bos.toByteArray()
+
+                //write the bytes in file
+                val fos = FileOutputStream(file)
+                fos.write(bitmapdata)
+                fos.flush()
+                fos.close()
+
+                Log.e("Dashboard", "image file path-----------------> $filePath")
+                Log.e("Dashboard", "image file size after compression-----------------> " + file.length())
+                return file.length()
+            } catch (e: FileNotFoundException) {
+                // TODO Auto-generated catch block
+                e.printStackTrace()
+            } catch (e: IOException) {
+                // TODO Auto-generated catch block
+                e.printStackTrace()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return 0
+        }
         fun getCompressOldImage(filePath: String, context: Context): Long {
             var updatedFilePath = ""
             if (filePath.contains("file://")) {
@@ -2739,4 +2880,5 @@ class AppUtils {
         }*/
              var isFromOrderToshowSchema = false
     }
+
 }

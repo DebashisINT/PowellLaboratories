@@ -1,6 +1,7 @@
 package com.powelllaboratoriesfsm.features.nearbyshops.api
 
 import com.powelllaboratoriesfsm.app.Pref
+import com.powelllaboratoriesfsm.base.BaseResponse
 import com.powelllaboratoriesfsm.features.login.model.GetQtsAnsSubmitDtlsResponseModel
 import com.powelllaboratoriesfsm.features.login.model.GetSecImageUploadResponseModel
 import com.powelllaboratoriesfsm.features.login.model.productlistmodel.ModelListResponse
@@ -71,4 +72,10 @@ class ShopListRepository(val apiService: ShopListApi) {
     fun getQuestionList(): Observable<QuesListResponseModel> {
         return apiService.getQuesList(Pref.session_token!!, Pref.user_id!!)
     }
+
+    fun deleteImei(): Observable<BaseResponse> {
+        return apiService.deleteImeiAPI(Pref.session_token!!, Pref.user_id!!)
+    }
+
+
 }

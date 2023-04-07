@@ -16,11 +16,14 @@ import android.widget.RelativeLayout
 import com.powelllaboratoriesfsm.R
 import com.powelllaboratoriesfsm.app.AppDatabase
 import com.powelllaboratoriesfsm.app.Pref
+import com.powelllaboratoriesfsm.app.domain.AddShopDBModelEntity
 import com.powelllaboratoriesfsm.app.domain.OrderDetailsListEntity
 import com.powelllaboratoriesfsm.app.uiaction.IntentActionable
 import com.powelllaboratoriesfsm.app.utils.AppUtils
 import com.powelllaboratoriesfsm.base.presentation.BaseFragment
 import com.powelllaboratoriesfsm.features.dashboard.presentation.DashboardActivity
+import com.powelllaboratoriesfsm.features.location.LocationWizard
+import com.powelllaboratoriesfsm.features.viewAllOrder.orderOptimized.OrderProductCartFrag
 import com.powelllaboratoriesfsm.widgets.AppCustomTextView
 
 /**
@@ -98,7 +101,13 @@ class ViewCartFragment : BaseFragment() {
         tv_total_order_value = view.findViewById(R.id.tv_total_order_value)
         tv_shop_name = view.findViewById(R.id.tv_shop_name)
 
-        val shop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(orderDetails?.shop_id)
+
+        var shop = AddShopDBModelEntity()
+        try {
+             shop = AppDatabase.getDBInstance()!!.addShopEntryDao().getShopDetail(orderDetails?.shop_id)
+        }catch (ex:Exception){
+            ex.printStackTrace()
+        }
         tv_shop_name.text = shop.shopName
 
         tv_order_id = view.findViewById(R.id.tv_order_id)

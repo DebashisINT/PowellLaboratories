@@ -34,7 +34,7 @@ import com.powelllaboratoriesfsm.features.shopdetail.presentation.model.addcolle
 import com.powelllaboratoriesfsm.features.viewAllOrder.api.addorder.AddOrderRepoProvider
 import com.powelllaboratoriesfsm.features.viewAllOrder.model.AddOrderInputParamsModel
 import com.powelllaboratoriesfsm.features.viewAllOrder.model.AddOrderInputProductList
-import com.elvishew.xlog.XLog
+
 import com.pnikosis.materialishprogress.ProgressWheel
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers

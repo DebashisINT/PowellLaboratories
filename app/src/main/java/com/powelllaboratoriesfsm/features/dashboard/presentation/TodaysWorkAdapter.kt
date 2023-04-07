@@ -11,6 +11,7 @@ import android.view.View
 import android.view.ViewGroup
 import com.powelllaboratoriesfsm.R
 import com.powelllaboratoriesfsm.app.AppDatabase
+import com.powelllaboratoriesfsm.app.Pref
 import com.powelllaboratoriesfsm.app.domain.SelectedRouteShopListEntity
 import com.powelllaboratoriesfsm.app.domain.SelectedWorkTypeEntity
 import com.powelllaboratoriesfsm.app.utils.AppUtils
@@ -122,7 +123,11 @@ class TodaysWorkAdapter(context: Context, list: ArrayList<SelectedWorkTypeEntity
                         bgShape.setColor(context.resources.getColor(R.color.purple))
                     }
                     itemView.avg_order_val_TV.text = ""
-                    itemView.shop_name_TV.text = list[adapterPosition].Descrpton
+                    if(Pref.IsJointVisitEnable){
+                        itemView.shop_name_TV.text = list[adapterPosition].Descrpton+"\nJoint Visit : ${Pref.JointVisitSelectedUserName}"
+                    }else{
+                        itemView.shop_name_TV.text = list[adapterPosition].Descrpton
+                    }
                     itemView.shop_address_TV.visibility = View.GONE
                     itemView.rv_route_shop_list.visibility = View.GONE
                     itemView.rl_work_plan.visibility = View.VISIBLE

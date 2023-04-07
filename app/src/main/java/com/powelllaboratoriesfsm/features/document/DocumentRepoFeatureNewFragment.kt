@@ -18,7 +18,7 @@ import com.powelllaboratoriesfsm.features.dashboard.presentation.DashboardActivi
 import com.powelllaboratoriesfsm.features.document.api.DocumentRepoProvider
 import com.powelllaboratoriesfsm.features.document.model.DocumentTypeResponseModel
 import com.powelllaboratoriesfsm.widgets.AppCustomTextView
-import com.elvishew.xlog.XLog
+
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import org.jetbrains.anko.doAsync
