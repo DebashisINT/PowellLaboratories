@@ -44,6 +44,7 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_order_type_list_new.*
 import org.jetbrains.anko.doAsync
 import org.jetbrains.anko.uiThread
+import timber.log.Timber
 import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.system.measureTimeMillis
@@ -200,7 +201,13 @@ class OrderProductListFrag : BaseFragment(), View.OnClickListener {
                 if(Pref.isRateOnline){
                     loadProduct(AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAllFromOnline() as ArrayList<CustomProductRate>)
                 }else{
-                    loadProduct(AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAll() as ArrayList<CustomProductRate>)
+                    Timber.d("initProduct offlineRate")
+                    try{
+                        loadProduct(AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAll() as ArrayList<CustomProductRate>)
+                    }catch (ex:Exception){
+                        ex.printStackTrace()
+                        Timber.d("initProduct offlineRate err ${ex.message} ${ex.localizedMessage}")
+                    }
                 }
             }, 1500)
         }
@@ -298,27 +305,42 @@ class OrderProductListFrag : BaseFragment(), View.OnClickListener {
                 }
             }
             R.id.iv_frag_ord_prod_search -> {
-                if (etSearch.text.toString().equals("")) {
-                    if(Pref.isRateOnline){
-                        loadProduct(AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAllFromOnline() as ArrayList<CustomProductRate>)
-                    }else{
-                        loadProduct(AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAll() as ArrayList<CustomProductRate>)
-                    }
-                }else{
-                    progrwss_wheel.spin()
-                    AppUtils.hideSoftKeyboard(mContext as DashboardActivity)
-                    Handler().postDelayed(Runnable {
-                        var allProductL : ArrayList<CustomProductRate> = ArrayList()
+                try{
+                    Timber.d("iv_frag_ord_prod_search cli")
+                    if (etSearch.text.toString().equals("")) {
                         if(Pref.isRateOnline){
-                            allProductL = AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAllFromOnline() as ArrayList<CustomProductRate>
+                            loadProduct(AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAllFromOnline() as ArrayList<CustomProductRate>)
                         }else{
-                            allProductL = AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAll() as ArrayList<CustomProductRate>
+                            loadProduct(AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAll() as ArrayList<CustomProductRate>)
                         }
+                    }
+                    else{
+                        progrwss_wheel.spin()
+                        AppUtils.hideSoftKeyboard(mContext as DashboardActivity)
+                        Handler().postDelayed(Runnable {
+                            try {
+                            var allProductL : ArrayList<CustomProductRate> = ArrayList()
+                            if(Pref.isRateOnline){
+                                allProductL = AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAllFromOnline() as ArrayList<CustomProductRate>
+                            }else{
+                                allProductL = AppDatabase.getDBInstance()?.productListDao()?.getCustomizeProductListAll() as ArrayList<CustomProductRate>
+                            }
 
-                        var searchObj = etSearch.text.toString().replace("  "," ")
-                        loadProduct(allProductL.filter { it.product_name.replace("  "," ").contains(searchObj, ignoreCase = true) || it.brand.contains(searchObj, ignoreCase = true) } as ArrayList<CustomProductRate>)
-                    }, 500)
+                            var searchObj = etSearch.text.toString().replace("  "," ")
+
+                                loadProduct(allProductL.filter { it.product_name.replace("  "," ").contains(searchObj, ignoreCase = true) || it.brand.contains(searchObj, ignoreCase = true) } as ArrayList<CustomProductRate>)
+                            }catch (ex:Exception){
+                                ex.printStackTrace()
+                                Timber.d("iv_frag_ord_prod_search inside err ${ex.message} ${ex.localizedMessage}")
+                            }
+
+                        }, 500)
+                    }
+                }catch (ex:Exception){
+                    ex.printStackTrace()
+                    Timber.d("iv_frag_ord_prod_search err ${ex.message} ${ex.localizedMessage}")
                 }
+
             }
             R.id.iv_frag_ord_prod_filter->{
                 if(llFilterRoot.visibility == View.VISIBLE){
@@ -363,40 +385,44 @@ class OrderProductListFrag : BaseFragment(), View.OnClickListener {
     }
 
     fun loadProduct(productL: ArrayList<CustomProductRate>) {
-        progrwss_wheel.spin()
-        var productQtyRateSubmit: ArrayList<ProductQtyRateSubmit> = ArrayList()
-        for (i in 0..productL.size - 1) {
-            var obj: ProductQtyRateSubmit = ProductQtyRateSubmit()
-            obj.apply {
-                product_id = productL.get(i).product_id
-                product_name = productL.get(i).product_name
-                brand_id = productL.get(i).brand_id
-                brand = productL.get(i).brand
-                category_id = productL.get(i).category_id
-                category = productL.get(i).category
-                watt_id = productL.get(i).watt_id
-                watt = productL.get(i).watt
-                product_mrp_show = productL.get(i).product_mrp_show
-                product_discount_show = productL.get(i).product_discount_show
-                rate = productL.get(i).rate
-                submitedQty = "-1"
-                submitedRate = productL.get(i).rate
 
-                if(Pref.isRateOnline){
-                    if((AppDatabase.getDBInstance()?.productOnlineRateTempDao()?.getAll() as ArrayList<ProductOnlineRateTempEntity>).size>0){
-                        var secObj = AppDatabase.getDBInstance()?.productOnlineRateTempDao()?.getObjByProductID(productL.get(i).product_id!!)?.firstOrNull()
-                        stock_amount = if(secObj != null) secObj.stock_amount.toString() else "0"
-                        stock_unit = if(secObj != null) secObj.stock_unit.toString() else ""
-                        isStockShow = if(secObj != null) secObj.isStockShow else false
-                        isRateShow = if(secObj != null) secObj.isRateShow else false
+        try{
+
+            Timber.d("loadProduct")
+            progrwss_wheel.spin()
+            var productQtyRateSubmit: ArrayList<ProductQtyRateSubmit> = ArrayList()
+            for (i in 0..productL.size - 1) {
+                var obj: ProductQtyRateSubmit = ProductQtyRateSubmit()
+                obj.apply {
+                    product_id = productL.get(i).product_id
+                    product_name = productL.get(i).product_name
+                    brand_id = productL.get(i).brand_id
+                    brand = productL.get(i).brand
+                    category_id = productL.get(i).category_id
+                    category = productL.get(i).category
+                    watt_id = productL.get(i).watt_id
+                    watt = productL.get(i).watt
+                    product_mrp_show = productL.get(i).product_mrp_show
+                    product_discount_show = productL.get(i).product_discount_show
+                    rate = productL.get(i).rate
+                    submitedQty = "-1"
+                    submitedRate = productL.get(i).rate
+
+                    if(Pref.isRateOnline){
+                        if((AppDatabase.getDBInstance()?.productOnlineRateTempDao()?.getAll() as ArrayList<ProductOnlineRateTempEntity>).size>0){
+                            var secObj = AppDatabase.getDBInstance()?.productOnlineRateTempDao()?.getObjByProductID(productL.get(i).product_id!!)?.firstOrNull()
+                            stock_amount = if(secObj != null) secObj.stock_amount.toString() else "0"
+                            stock_unit = if(secObj != null) secObj.stock_unit.toString() else ""
+                            isStockShow = if(secObj != null) secObj.isStockShow else false
+                            isRateShow = if(secObj != null) secObj.isRateShow else false
+                        }
                     }
                 }
+
+                productQtyRateSubmit.add(obj)
             }
 
-            productQtyRateSubmit.add(obj)
-        }
-
-        productAdapter = AdapterOrdProductOptimized(mContext, productQtyRateSubmit, finalOrderDataList, object :
+            productAdapter = AdapterOrdProductOptimized(mContext, productQtyRateSubmit, finalOrderDataList, object :
                 AdapterOrdProductOptimized.OnProductOptiOnClick {
                 override fun onProductAddClick(productCount: Int,sumAmt:Double) {
                     AppUtils.hideSoftKeyboard(mContext as DashboardActivity)
@@ -404,10 +430,14 @@ class OrderProductListFrag : BaseFragment(), View.OnClickListener {
                     tv_productAmt.text = "₹ ${String.format("%.2f",sumAmt.toDouble())}"
                 }
             })
-        rv_product.adapter = productAdapter
-        Handler().postDelayed(Runnable {
-            progrwss_wheel.stopSpinning()
-        }, 1500)
+            rv_product.adapter = productAdapter
+            Handler().postDelayed(Runnable {
+                progrwss_wheel.stopSpinning()
+            }, 1500)
+        }catch (ex:Exception){
+            ex.printStackTrace()
+            Timber.d("loadProduct err ${ex.message} ${ex.localizedMessage}")
+        }
 
     }
     private fun getProductRateListByShopID() {
