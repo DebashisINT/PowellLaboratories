@@ -277,6 +277,34 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
         WorkManager.getInstance(this).cancelAllWorkByTag("workerTag")
     }
 
+    //Begin 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
+    fun fetchCUrrentLoc(){
+        println("loc_fetch_tag login begin")
+        loadProgress()
+        SingleShotLocationProvider.requestSingleUpdate(mContext,
+            object : SingleShotLocationProvider.LocationCallback {
+                override fun onStatusChanged(status: String) {
+                }
+
+                override fun onProviderEnabled(status: String) {
+                }
+
+                override fun onProviderDisabled(status: String) {
+                }
+
+                override fun onNewLocationAvailable(location: Location) {
+                    println("loc_fetch_tag login end")
+                    Timber.d("Login  onNewLocationAvailableeee  ${location.latitude} ${location.longitude}")
+                    Pref.current_latitude = location.latitude.toString()
+                    Pref.current_longitude = location.longitude.toString()
+                    Pref.latitude = location.latitude.toString()
+                    Pref.longitude = location.longitude.toString()
+
+                }
+            })
+    }
+    //End of 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
+
     fun isWorkerRunning(tag:String):Boolean{
         val workInstance = WorkManager.getInstance(this)
         val status: ListenableFuture<List<WorkInfo>> = WorkManager.getInstance(this).getWorkInfosByTag(tag)
@@ -3648,39 +3676,84 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                      }
                  }*/
 
-                Timber.d("Login btn clicked ${AppUtils.getCurrentDateTime()}")
-                val stat = StatFs(Environment.getExternalStorageDirectory().path)
-                val bytesAvailable: Long
-                bytesAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-                    stat.blockSizeLong * stat.availableBlocksLong
-                } else {
-                    stat.blockSize.toLong() * stat.availableBlocks.toLong()
-                }
-                val megAvailable = bytesAvailable / (1024 * 1024)
-                println("storage " + megAvailable.toString());
-//                XLog.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
-                Timber.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
+                //Begin 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
+                fetchCUrrentLoc()
+                //End of 18.0  LoginActivity 0026388	mantis Suman v 4.1.6 20-06-2023
 
-                if (megAvailable < 5000 && false) {
-                    val simpleDialog = Dialog(this@LoginActivity)
-                    simpleDialog.setCancelable(false)
-                    simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-                    simpleDialog.setContentView(R.layout.dialog_message)
-                    val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
-                    val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
-                    if (Pref.user_name != null) {
-                        dialog_yes_no_headerTV.text = "Hi " + Pref.user_name!! + "!"
+                Handler().postDelayed(Runnable {
+                    loadNotProgress()
+                    AppUtils.hideSoftKeyboard(this@LoginActivity)
+                    rl_main_new.requestFocus()
+
+                    Timber.d("Login btn clicked ${AppUtils.getCurrentDateTime()}")
+                    val stat = StatFs(Environment.getExternalStorageDirectory().path)
+                    val bytesAvailable: Long
+                    bytesAvailable = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                        stat.blockSizeLong * stat.availableBlocksLong
                     } else {
-                        dialog_yes_no_headerTV.text = "Hi User" + "!"
+                        stat.blockSize.toLong() * stat.availableBlocks.toLong()
                     }
-                    //dialogHeader.text = "You have only "+megAvailable.toString()+ " MB available to store data. It is not sufficient\n" +
-                    //"to proceed. Please clear memory and Retry Login again. Thanks."
+                    val megAvailable = bytesAvailable / (1024 * 1024)
+                    println("storage " + megAvailable.toString());
+//                XLog.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
+                    Timber.d("phone storage : FREE SPACE AVAILABLE : " + megAvailable.toString() + " Time :" + AppUtils.getCurrentDateTime())
 
-                    dialogHeader.text = "Please note that memory available is less than 5 GB. App may not function properly. Please make available memory greater than 5 GB."
+                    if (megAvailable < 5000 && false) {
+                        val simpleDialog = Dialog(this@LoginActivity)
+                        simpleDialog.setCancelable(false)
+                        simpleDialog.getWindow()!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                        simpleDialog.setContentView(R.layout.dialog_message)
+                        val dialogHeader = simpleDialog.findViewById(R.id.dialog_message_header_TV) as AppCustomTextView
+                        val dialog_yes_no_headerTV = simpleDialog.findViewById(R.id.dialog_message_headerTV) as AppCustomTextView
+                        if (Pref.user_name != null) {
+                            dialog_yes_no_headerTV.text = "Hi " + Pref.user_name!! + "!"
+                        } else {
+                            dialog_yes_no_headerTV.text = "Hi User" + "!"
+                        }
+                        //dialogHeader.text = "You have only "+megAvailable.toString()+ " MB available to store data. It is not sufficient\n" +
+                        //"to proceed. Please clear memory and Retry Login again. Thanks."
 
-                    val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
-                    dialogYes.setOnClickListener({ view ->
-                        simpleDialog.cancel()
+                        dialogHeader.text = "Please note that memory available is less than 5 GB. App may not function properly. Please make available memory greater than 5 GB."
+
+                        val dialogYes = simpleDialog.findViewById(R.id.tv_message_ok) as AppCustomTextView
+                        dialogYes.setOnClickListener({ view ->
+                            simpleDialog.cancel()
+                            login_TV.isEnabled = false
+                            disableScreen()
+                            println("xyzy - login called" + AppUtils.getCurrentDateTime());
+                            //Crashlytics.getInstance().crash()
+                            if (TextUtils.isEmpty(username_EDT.text.toString().trim())) {
+                                showSnackMessage(getString(R.string.error_enter_username))
+                                login_TV.isEnabled = true
+                                enableScreen()
+                            } else if (TextUtils.isEmpty(password_EDT.text.toString().trim())) {
+                                showSnackMessage(getString(R.string.error_enter_pwd))
+                                login_TV.isEnabled = true
+                                enableScreen()
+                            } else {
+                                AppUtils.hideSoftKeyboard(this@LoginActivity)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                    if (Settings.canDrawOverlays(this@LoginActivity)) {
+                                        initiateLogin()
+                                    } else {
+                                        //Permission is not available. Display error text.
+                                        //getOverlayPermission()
+
+                                        // overlay testing
+                                        initiateLogin()
+                                    }
+                                } else {
+                                    initiateLogin()
+                                }
+
+
+                            }
+                            /*gotoHomeActivity()
+                            isLoginLoaded = true*/
+                        })
+                        simpleDialog.show()
+                    }
+                    else {
                         login_TV.isEnabled = false
                         disableScreen()
                         println("xyzy - login called" + AppUtils.getCurrentDateTime());
@@ -3713,43 +3786,11 @@ class LoginActivity : BaseActivity(), View.OnClickListener, LocationListener {
                         }
                         /*gotoHomeActivity()
                         isLoginLoaded = true*/
-                    })
-                    simpleDialog.show()
-                }
-                else {
-                    login_TV.isEnabled = false
-                    disableScreen()
-                    println("xyzy - login called" + AppUtils.getCurrentDateTime());
-                    //Crashlytics.getInstance().crash()
-                    if (TextUtils.isEmpty(username_EDT.text.toString().trim())) {
-                        showSnackMessage(getString(R.string.error_enter_username))
-                        login_TV.isEnabled = true
-                        enableScreen()
-                    } else if (TextUtils.isEmpty(password_EDT.text.toString().trim())) {
-                        showSnackMessage(getString(R.string.error_enter_pwd))
-                        login_TV.isEnabled = true
-                        enableScreen()
-                    } else {
-                        AppUtils.hideSoftKeyboard(this@LoginActivity)
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            if (Settings.canDrawOverlays(this@LoginActivity)) {
-                                initiateLogin()
-                            } else {
-                                //Permission is not available. Display error text.
-                                //getOverlayPermission()
-
-                                // overlay testing
-                                initiateLogin()
-                            }
-                        } else {
-                            initiateLogin()
-                        }
-
-
                     }
-                    /*gotoHomeActivity()
-                    isLoginLoaded = true*/
-                }
+
+                }, 2200)
+
+
 
 
 
